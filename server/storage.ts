@@ -1,38 +1,72 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import { users, expenses, type User, type InsertUser, type Expense, type InsertExpense } from "@shared/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  getExpenses(userId: number): Promise<Expense[]>;
+  createExpense(userId: number, expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: number, updates: Partial<Expense>): Promise<Expense | undefined>;
+  deleteExpense(id: number): Promise<void>;
+  getExpensesByDateRange(userId: number, startDate?: string, endDate?: string): Promise<Expense[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async getExpenses(userId: number): Promise<Expense[]> {
+    return await db.select().from(expenses).where(eq(expenses.userId, userId));
+  }
+
+  async createExpense(userId: number, expense: InsertExpense): Promise<Expense> {
+    const [newExpense] = await db.insert(expenses).values({ ...expense, userId }).returning();
+    return newExpense;
+  }
+
+  async updateExpense(id: number, updates: Partial<Expense>): Promise<Expense | undefined> {
+    const [updated] = await db.update(expenses).set(updates).where(eq(expenses.id, id)).returning();
+    return updated;
+  }
+
+  async deleteExpense(id: number): Promise<void> {
+    await db.delete(expenses).where(eq(expenses.id, id));
+  }
+
+  async getExpensesByDateRange(userId: number, startDate?: string, endDate?: string): Promise<Expense[]> {
+    let query = db.select().from(expenses).where(eq(expenses.userId, userId));
+    
+    if (startDate) {
+      query = db.select().from(expenses).where(and(eq(expenses.userId, userId), gte(expenses.date, startDate)));
+    }
+    
+    if (endDate) {
+      // Re-apply startDate filter if it exists, or just use endDate
+      // This is a simplification, ideally we chain .where()
+      const conditions = [eq(expenses.userId, userId)];
+      if (startDate) conditions.push(gte(expenses.date, startDate));
+      if (endDate) conditions.push(lte(expenses.date, endDate));
+      
+      return await db.select().from(expenses).where(and(...conditions));
+    }
+
+    return await query;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
