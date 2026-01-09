@@ -27,8 +27,11 @@ export async function registerRoutes(
 
   app.post(api.expenses.create.path, requireAuth, async (req, res) => {
     try {
-      const input = api.expenses.create.input.parse(req.body);
-      const expense = await storage.createExpense((req.user as any).id, input);
+      const bodySchema = api.expenses.create.input.extend({
+        amount: z.coerce.string(),
+      });
+      const input = bodySchema.parse(req.body);
+      const expense = await storage.createExpense((req.user as any).id, input as any);
       res.status(201).json(expense);
     } catch (err) {
       if (err instanceof z.ZodError) {
