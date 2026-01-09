@@ -127,11 +127,11 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <span className="font-bold">$</span>
+              <span className="font-bold">₹</span>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">${totalAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display">₹{totalAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">For selected period</p>
           </CardContent>
         </Card>
@@ -144,7 +144,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display text-yellow-600">${pendingAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display text-yellow-600">₹{pendingAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
           </CardContent>
         </Card>
@@ -157,7 +157,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display text-green-600">${approvedAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display text-green-600">₹{approvedAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">Reimbursable amount</p>
           </CardContent>
         </Card>
@@ -246,7 +246,7 @@ export default function Dashboard() {
                           </div>
                         </TableCell>
                         <TableCell className="font-bold font-mono text-base">
-                          ${Number(expense.amount).toFixed(2)}
+                          ₹{Number(expense.amount).toFixed(2)}
                         </TableCell>
                         <TableCell>{getStatusBadge(expense.status)}</TableCell>
                       </TableRow>
@@ -300,7 +300,7 @@ export default function Dashboard() {
                 Policy Reminder
               </h3>
               <p className="text-sm opacity-90 leading-relaxed">
-                Travel expenses over $500 require pre-approval. Ensure all receipts are clear and legible before submission.
+                Travel expenses over ₹40,000 require pre-approval. Ensure all receipts are clear and legible before submission.
               </p>
             </CardContent>
           </Card>

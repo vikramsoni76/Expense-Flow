@@ -177,7 +177,7 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                    <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
                     <Input type="number" step="0.01" className="pl-7" placeholder="0.00" {...field} />
                   </div>
                 </FormControl>
@@ -205,6 +205,7 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Air">Air</SelectItem>
+                        <SelectItem value="Train">Train</SelectItem>
                         <SelectItem value="Taxi">Taxi</SelectItem>
                         <SelectItem value="Car">Car (Personal)</SelectItem>
                         <SelectItem value="Bus">Bus</SelectItem>
