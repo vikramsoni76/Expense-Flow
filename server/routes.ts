@@ -21,14 +21,14 @@ export async function registerRoutes(
   };
 
   app.get(api.expenses.list.path, requireAuth, async (req, res) => {
-    const expenses = await storage.getExpenses(req.user!.id);
+    const expenses = await storage.getExpenses((req.user as any).id);
     res.json(expenses);
   });
 
   app.post(api.expenses.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.expenses.create.input.parse(req.body);
-      const expense = await storage.createExpense(req.user!.id, input);
+      const expense = await storage.createExpense((req.user as any).id, input);
       res.status(201).json(expense);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -58,7 +58,7 @@ export async function registerRoutes(
   app.get(api.reports.csv.path, requireAuth, async (req, res) => {
     const { startDate, endDate } = req.query;
     const expenses = await storage.getExpensesByDateRange(
-      req.user!.id, 
+      (req.user as any).id, 
       startDate as string, 
       endDate as string
     );

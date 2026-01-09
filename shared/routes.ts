@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertExpenseSchema, expenses, insertUserSchema, users } from './schema';
+import { insertExpenseSchema, expenses, insertUserSchema, users, type InsertUser, type InsertExpense } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -111,3 +111,5 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   }
   return url;
 }
+
+export type { InsertUser, InsertExpense };
