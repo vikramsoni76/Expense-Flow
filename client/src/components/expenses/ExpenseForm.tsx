@@ -142,11 +142,11 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                 <FormLabel>Category</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-10 rounded-xl">
+                    <SelectTrigger className="h-10 rounded-xl bg-background">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-background">
                     <SelectItem value="Travel">
                       <div className="flex items-center gap-2">
                         <Plane className="w-4 h-4 text-blue-500" /> Travel
@@ -155,6 +155,11 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                     <SelectItem value="Food">
                       <div className="flex items-center gap-2">
                         <Coffee className="w-4 h-4 text-orange-500" /> Food
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Hotel">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="w-4 h-4 text-purple-500" /> Hotel
                       </div>
                     </SelectItem>
                     <SelectItem value="Other">
