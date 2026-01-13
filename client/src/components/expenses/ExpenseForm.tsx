@@ -208,7 +208,7 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                           <SelectValue placeholder="Select mode" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-background">
                         <SelectItem value="Air">Air</SelectItem>
                         <SelectItem value="Train">Train</SelectItem>
                         <SelectItem value="Taxi">Taxi</SelectItem>
