@@ -1,7 +1,7 @@
 import { useExpenses } from "@/hooks/use-expenses";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Plus, Search, Filter, Plane, Coffee, MoreHorizontal, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Search, Filter, Plane, Coffee, MoreHorizontal, AlertCircle, CheckCircle2, Clock, Edit2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,10 +34,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { expenses, isLoading, createExpense } = useExpenses();
+  const { expenses, isLoading, createExpense, updateExpense, deleteExpense } = useExpenses();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
 
   // Filter expenses based on search and status
   const filteredExpenses = expenses?.filter(expense => {
@@ -57,12 +58,26 @@ export default function Dashboard() {
   const categoryData = [
     { name: 'Travel', value: filteredExpenses.filter(e => e.category === 'Travel').reduce((sum, e) => sum + Number(e.amount), 0), color: '#3b82f6' },
     { name: 'Food', value: filteredExpenses.filter(e => e.category === 'Food').reduce((sum, e) => sum + Number(e.amount), 0), color: '#f97316' },
+    { name: 'Hotel', value: filteredExpenses.filter(e => e.category === 'Hotel').reduce((sum, e) => sum + Number(e.amount), 0), color: '#a855f7' },
     { name: 'Other', value: filteredExpenses.filter(e => e.category === 'Other').reduce((sum, e) => sum + Number(e.amount), 0), color: '#6b7280' },
   ].filter(item => item.value > 0);
 
   const handleCreate = async (data: any) => {
     await createExpense.mutateAsync(data);
     setOpen(false);
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (editingExpense) {
+      await updateExpense.mutateAsync({ id: editingExpense.id, data });
+      setEditingExpense(null);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
+      await deleteExpense.mutateAsync(id);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -80,6 +95,7 @@ export default function Dashboard() {
     switch(category) {
       case 'Travel': return <Plane className="w-4 h-4 text-blue-500" />;
       case 'Food': return <Coffee className="w-4 h-4 text-orange-500" />;
+      case 'Hotel': return <ShoppingBag className="w-4 h-4 text-purple-500" />;
       default: return <MoreHorizontal className="w-4 h-4 text-gray-500" />;
     }
   };
@@ -105,7 +121,7 @@ export default function Dashboard() {
         
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="shadow-lg shadow-primary/25 rounded-xl px-6 h-11 font-semibold transition-all hover:-translate-y-0.5">
+            <Button className="shadow-lg shadow-primary/25 rounded-xl px-6 h-11 font-semibold transition-all hover:-translate-y-0.5" data-testid="button-add-expense">
               <Plus className="mr-2 h-4 w-4" /> Add Expense
             </Button>
           </DialogTrigger>
@@ -117,6 +133,28 @@ export default function Dashboard() {
               </DialogDescription>
             </DialogHeader>
             <ExpenseForm onSubmit={handleCreate} isSubmitting={createExpense.isPending} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!editingExpense} onOpenChange={(open) => !open && setEditingExpense(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-display">Edit Expense</DialogTitle>
+              <DialogDescription>
+                Modify the details of your expense record.
+              </DialogDescription>
+            </DialogHeader>
+            {editingExpense && (
+              <ExpenseForm 
+                onSubmit={handleUpdate} 
+                isSubmitting={updateExpense.isPending} 
+                defaultValues={{
+                  ...editingExpense,
+                  date: new Date(editingExpense.date),
+                  amount: Number(editingExpense.amount)
+                }} 
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -131,7 +169,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">₹{totalAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display" data-testid="text-total-amount">₹{totalAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">For selected period</p>
           </CardContent>
         </Card>
@@ -144,7 +182,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display text-yellow-600">₹{pendingAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display text-yellow-600" data-testid="text-pending-amount">₹{pendingAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
           </CardContent>
         </Card>
@@ -157,7 +195,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display text-green-600">₹{approvedAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold font-display text-green-600" data-testid="text-approved-amount">₹{approvedAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">Reimbursable amount</p>
           </CardContent>
         </Card>
@@ -174,16 +212,17 @@ export default function Dashboard() {
                 className="pl-9 h-10 rounded-xl bg-background border-border/60" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                data-testid="input-search"
               />
             </div>
             
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[150px] h-10 rounded-xl border-border/60">
+                <SelectTrigger className="w-full sm:w-[150px] h-10 rounded-xl border-border/60" data-testid="select-status-filter">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background">
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
@@ -203,12 +242,13 @@ export default function Dashboard() {
                     <TableHead>Category</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredExpenses.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-64 text-center">
+                      <TableCell colSpan={6} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                           <div className="w-16 h-16 rounded-full bg-secondary mb-4 flex items-center justify-center">
                             <Search className="w-8 h-8 opacity-50" />
@@ -238,7 +278,8 @@ export default function Dashboard() {
                             <div className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center",
                               expense.category === 'Travel' ? "bg-blue-500/10" :
-                              expense.category === 'Food' ? "bg-orange-500/10" : "bg-gray-500/10"
+                              expense.category === 'Food' ? "bg-orange-500/10" : 
+                              expense.category === 'Hotel' ? "bg-purple-500/10" : "bg-gray-500/10"
                             )}>
                               {getCategoryIcon(expense.category)}
                             </div>
@@ -249,6 +290,30 @@ export default function Dashboard() {
                           ₹{Number(expense.amount).toFixed(2)}
                         </TableCell>
                         <TableCell>{getStatusBadge(expense.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={() => setEditingExpense(expense)}
+                              disabled={expense.status !== 'pending'}
+                              data-testid={`button-edit-${expense.id}`}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDelete(expense.id)}
+                              disabled={expense.status !== 'pending'}
+                              data-testid={`button-delete-${expense.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
