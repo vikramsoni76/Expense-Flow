@@ -86,6 +86,12 @@ Preferred communication style: Simple, everyday language.
 - **esbuild**: Production server bundling
 - **tsx**: TypeScript execution for development
 
+### PWA (Progressive Web App)
+- **Manifest**: `client/public/manifest.json` — app name, icons, theme color, display mode
+- **Service Worker**: `client/public/sw.js` — caches static assets, network-first for API calls, offline fallback
+- **Icons**: `client/public/icons/` — 192x192 and 512x512 PNG icons
+- **Install**: Users can install the app from the browser's "Add to Home Screen" or install prompt
+
 ### Environment Variables Required
 - `DATABASE_URL`: PostgreSQL connection string
 - `SESSION_SECRET`: Secret for session encryption (defaults to "r3pl1t" in development)
