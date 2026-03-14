@@ -1,7 +1,7 @@
 import { useExpenses } from "@/hooks/use-expenses";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Plus, Search, Filter, Plane, Coffee, MoreHorizontal, AlertCircle, CheckCircle2, Clock, Edit2, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Plane, Coffee, MoreHorizontal, AlertCircle, CheckCircle2, Clock, Edit2, Trash2, ShoppingBag } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,7 @@ export default function Dashboard() {
 
   const handleUpdate = async (data: any) => {
     if (editingExpense) {
-      await updateExpense.mutateAsync({ id: editingExpense.id, data });
+      await updateExpense.mutateAsync({ id: editingExpense.id, ...data });
       setEditingExpense(null);
     }
   };
@@ -262,7 +262,14 @@ export default function Dashboard() {
                     filteredExpenses.map((expense) => (
                       <TableRow key={expense.id} className="group hover:bg-secondary/20 transition-colors">
                         <TableCell className="font-medium text-muted-foreground">
-                          {format(new Date(expense.date), "MMM d, yyyy")}
+                          {(() => {
+                            try {
+                              const d = new Date(expense.date);
+                              return isNaN(d.getTime()) ? expense.date : format(d, "MMM d, yyyy");
+                            } catch {
+                              return expense.date;
+                            }
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{expense.description}</div>

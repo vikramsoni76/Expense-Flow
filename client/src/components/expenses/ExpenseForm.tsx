@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, Plane, Bus, Car, Train, ShoppingBag, Coffee, MoreHorizontal } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Extend the schema for form handling (coerce numbers)
 const formSchema = insertExpenseSchema.extend({
@@ -42,6 +42,7 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFormProps) {
+  const [dateOpen, setDateOpen] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -98,13 +99,13 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date</FormLabel>
-                <Popover>
+                <Popover open={dateOpen} onOpenChange={setDateOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal h-10 rounded-xl",
+                          "w-full pl-3 text-left font-normal h-10 rounded-xl bg-background",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -117,11 +118,14 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 bg-background border border-border shadow-md" align="start">
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                        field.onChange(date);
+                        setDateOpen(false);
+                      }}
                       disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
                       }
