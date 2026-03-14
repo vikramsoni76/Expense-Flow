@@ -5,6 +5,15 @@ import { api } from "@shared/routes";
 import { setupAuth } from "./auth";
 import { z } from "zod";
 import { Parser } from "json2csv";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -172,19 +181,36 @@ export async function registerRoutes(
     }
   });
 
-  // Seed data function (simple check)
+  // Admin: reset all data (clear all expenses + non-admin users)
+  app.post('/api/admin/reset-all-data', requireAdmin, async (req, res) => {
+    try {
+      await storage.resetAllData();
+      res.json({ message: 'All data cleared successfully.' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to reset data.' });
+    }
+  });
+
+  // Ensure Admin account always exists with correct credentials and isAdmin=true
   async function seed() {
-    // Check if any users exist, if not create a demo user
-    const demoUsername = "demo";
-    const existing = await storage.getUserByUsername(demoUsername);
-    if (!existing) {
-      // Create demo user via auth route logic or direct storage if we had hashing helper exposed
-      // Since we don't have hashing helper exposed easily here without importing, we'll skip auto-seeding user
-      // But we can console log instructions
-      console.log("Database initialized. Create a user to start.");
+    try {
+      const adminUsername = "Admin";
+      const existing = await storage.getUserByUsername(adminUsername);
+      if (!existing) {
+        const hashed = await hashPassword("Anvi@1981");
+        await storage.createUser({ username: adminUsername, password: hashed, isAdmin: true });
+        console.log("Admin user created (Admin / Anvi@1981).");
+      } else if (!existing.isAdmin) {
+        await storage.setUserAdmin(existing.id, true);
+        console.log("Admin user promoted to admin.");
+      } else {
+        console.log("Admin user ready.");
+      }
+    } catch (err) {
+      console.error("Seed error:", err);
     }
   }
-  
+
   seed();
 
   return httpServer;

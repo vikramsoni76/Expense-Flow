@@ -8,6 +8,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  setUserAdmin(id: number, isAdmin: boolean): Promise<void>;
 
   getExpenses(userId: number): Promise<Expense[]>;
   getAllExpenses(): Promise<ExpenseWithUser[]>;
@@ -15,6 +16,8 @@ export interface IStorage {
   updateExpense(id: number, updates: Partial<Expense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<void>;
   getExpensesByDateRange(userId: number, startDate?: string, endDate?: string): Promise<Expense[]>;
+
+  resetAllData(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -31,6 +34,15 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async setUserAdmin(id: number, isAdmin: boolean): Promise<void> {
+    await db.update(users).set({ isAdmin }).where(eq(users.id, id));
+  }
+
+  async resetAllData(): Promise<void> {
+    await db.delete(expenses);
+    await db.delete(users).where(eq(users.isAdmin, false));
   }
 
   async getExpenses(userId: number): Promise<Expense[]> {

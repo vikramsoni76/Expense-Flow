@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import {
   CheckCircle2, XCircle, Search, Filter, Download,
   Plane, Coffee, ShoppingBag, MoreHorizontal, Users, AlertCircle,
-  DatabaseBackup, FileJson, FileText, ShieldCheck, Clock
+  DatabaseBackup, FileJson, FileText, ShieldCheck, Clock, Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,27 @@ export default function AdminDashboard() {
     await Promise.all(ids.map(id => updateStatus.mutateAsync({ id, status: 'rejected' })));
     setSelectedIds(new Set());
     toast({ title: `${ids.length} expenses rejected`, description: 'All selected expenses have been rejected.' });
+  };
+
+  const resetAllData = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/admin/reset-all-data', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to reset');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/expenses'] });
+      toast({ title: 'All data cleared', description: 'All expenses and non-admin users have been removed.' });
+    },
+    onError: () => {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to clear data.' });
+    },
+  });
+
+  const handleResetAllData = () => {
+    if (window.confirm('WARNING: This will delete ALL expenses and ALL employee accounts. The Admin account will remain. This cannot be undone. Are you sure?')) {
+      resetAllData.mutate();
+    }
   };
 
   const toggleSelect = (id: number) => {
@@ -467,6 +488,32 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="mt-4 border border-red-200 dark:border-red-800/50 rounded-xl p-4 bg-red-50/50 dark:bg-red-900/10 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0 mt-0.5">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-red-700 dark:text-red-400">Reset All Data</p>
+              <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">
+                Deletes ALL expenses and ALL employee accounts. Admin account is kept. Use only to start fresh — this cannot be undone.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleResetAllData}
+            disabled={resetAllData.isPending}
+            className="shrink-0 rounded-lg gap-1.5"
+            data-testid="button-reset-all-data"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {resetAllData.isPending ? 'Clearing…' : 'Clear All Data'}
+          </Button>
         </div>
       </div>
     </div>
