@@ -115,13 +115,22 @@ export default function Reports() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-blue-50/50 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/50">
           <CardHeader>
-            <CardTitle className="text-blue-700 dark:text-blue-300">Monthly Summary</CardTitle>
+            <CardTitle className="text-blue-700 dark:text-blue-300">CSV Report Columns</CardTitle>
           </CardHeader>
           <CardContent>
-             <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
-               Automated monthly reports are sent to your email on the 1st of every month. 
-               Check your inbox for the latest summary.
+             <p className="text-sm text-blue-600/80 dark:text-blue-400/80 mb-2">
+               Downloaded report includes these columns in order:
              </p>
+             <ol className="text-xs text-blue-600/80 dark:text-blue-400/80 list-decimal list-inside space-y-0.5">
+               <li>Date (DD/MM/YY)</li>
+               <li>Customer Name</li>
+               <li>Description</li>
+               <li>Start Location</li>
+               <li>End Location</li>
+               <li>Category</li>
+               <li>Mode</li>
+               <li>Amount (INR)</li>
+             </ol>
           </CardContent>
         </Card>
         
@@ -130,9 +139,11 @@ export default function Reports() {
             <CardTitle className="text-orange-700 dark:text-orange-300">Google Sheets Sync</CardTitle>
           </CardHeader>
           <CardContent>
-             <p className="text-sm text-orange-600/80 dark:text-orange-400/80">
-               Your expenses are automatically synced to the central finance sheet every 15 minutes.
-               No manual action required.
+             <p className="text-sm text-orange-600/80 dark:text-orange-400/80 mb-3">
+               Google Sheets sync requires a Google Service Account setup. Please contact your administrator to configure the integration with your sheet ID and credentials.
+             </p>
+             <p className="text-xs text-orange-500/70 dark:text-orange-400/60">
+               Once configured, expenses will sync automatically on submission.
              </p>
           </CardContent>
         </Card>

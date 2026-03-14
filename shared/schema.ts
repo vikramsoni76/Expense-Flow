@@ -13,7 +13,7 @@ export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   date: date("date").notNull(),
-  description: text("description").notNull(),
+  description: text("description").default('').notNull(),
   startLocation: text("start_location"),
   endLocation: text("end_location"),
   customerName: text("customer_name"),
@@ -43,6 +43,8 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   createdAt: true,
   status: true,
   googleSheetRowId: true 
+}).extend({
+  description: z.string().optional().default(''),
 });
 
 export type User = typeof users.$inferSelect;

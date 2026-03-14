@@ -67,9 +67,29 @@ export async function registerRoutes(
     );
 
     try {
-      const fields = ['date', 'description', 'category', 'amount', 'travelMode', 'startLocation', 'endLocation', 'customerName', 'status'];
+      const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const yy = String(d.getUTCFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+      };
+
+      const rows = expenses.map(e => ({
+        Date: formatDate(e.date),
+        'Customer Name': e.customerName || '',
+        Description: e.description || '',
+        'Start Location': e.startLocation || '',
+        'End Location': e.endLocation || '',
+        Category: e.category,
+        Mode: e.travelMode || '',
+        'Amount (INR)': Number(e.amount).toFixed(2),
+      }));
+
+      const fields = ['Date', 'Customer Name', 'Description', 'Start Location', 'End Location', 'Category', 'Mode', 'Amount (INR)'];
       const parser = new Parser({ fields });
-      const csv = parser.parse(expenses);
+      const csv = parser.parse(rows);
       
       res.header('Content-Type', 'text/csv');
       res.attachment('expenses.csv');

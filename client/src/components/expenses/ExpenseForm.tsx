@@ -266,12 +266,13 @@ export function ExpenseForm({ defaultValues, onSubmit, isSubmitting }: ExpenseFo
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Description <span className="text-muted-foreground font-normal text-xs">(optional)</span></FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Details about the expense..." 
+                  placeholder="Details about the expense (optional)..." 
                   className="resize-none min-h-[80px]" 
-                  {...field} 
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
