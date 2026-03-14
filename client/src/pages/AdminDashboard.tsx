@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
-  CheckCircle2, XCircle, Clock, Search, Filter, Download,
-  Plane, Coffee, ShoppingBag, MoreHorizontal, Users, TrendingUp, AlertCircle
+  CheckCircle2, XCircle, Search, Filter, Download,
+  Plane, Coffee, ShoppingBag, MoreHorizontal, Users, AlertCircle,
+  DatabaseBackup, FileJson, FileText, ShieldCheck, Clock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -165,6 +166,16 @@ export default function AdminDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleBackupJson = () => {
+    const link = document.createElement('a');
+    link.href = '/api/admin/backup';
+    link.setAttribute('download', `expense_backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: 'Backup downloaded', description: 'Full JSON backup saved to your device.' });
   };
 
   if (isLoading) {
@@ -396,6 +407,68 @@ export default function AdminDashboard() {
           </Table>
         </div>
       </Card>
+
+      {/* Data Backup Section */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <DatabaseBackup className="w-5 h-5 text-primary" /> Data Backup
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-border/60 hover:shadow-md transition-shadow">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm mb-1">CSV Backup</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Download all employees' expenses as a CSV file. Opens in Excel or LibreOffice.
+                  </p>
+                  <Button size="sm" variant="outline" onClick={handleDownload} className="w-full rounded-lg gap-1.5" data-testid="button-backup-csv">
+                    <Download className="w-3.5 h-3.5" /> Download CSV
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 hover:shadow-md transition-shadow">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                  <FileJson className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm mb-1">Full JSON Backup</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Complete data export with all fields. Use this for safekeeping or restoring records.
+                  </p>
+                  <Button size="sm" variant="outline" onClick={handleBackupJson} className="w-full rounded-lg gap-1.5" data-testid="button-backup-json">
+                    <Download className="w-3.5 h-3.5" /> Download JSON
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-amber-50/60 border-amber-100 dark:bg-amber-900/10 dark:border-amber-800/40">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm mb-1 text-amber-800 dark:text-amber-300">Backup Reminder</p>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-400/80 leading-relaxed">
+                    Download a backup at least <strong>once a week</strong> and save it to your email, Google Drive, or local storage. This protects all data if the app ever has an issue.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

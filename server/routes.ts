@@ -118,6 +118,19 @@ export async function registerRoutes(
     }
   });
 
+  // Admin: full JSON backup of all data
+  app.get('/api/admin/backup', requireAdmin, async (req, res) => {
+    const allExpenses = await storage.getAllExpenses();
+    const backup = {
+      exportedAt: new Date().toISOString(),
+      totalExpenses: allExpenses.length,
+      expenses: allExpenses,
+    };
+    res.header('Content-Type', 'application/json');
+    res.attachment(`expense_backup_${new Date().toISOString().split('T')[0]}.json`);
+    return res.send(JSON.stringify(backup, null, 2));
+  });
+
   app.get(api.reports.csv.path, requireAuth, async (req, res) => {
     const { startDate, endDate } = req.query;
     const expenses = await storage.getExpensesByDateRange(
