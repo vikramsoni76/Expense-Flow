@@ -13,8 +13,9 @@ import Dashboard from "@/pages/Dashboard";
 import Reports from "@/pages/Reports";
 import AuthPage from "@/pages/AuthPage";
 import NotFound from "@/pages/NotFound";
+import AdminDashboard from "@/pages/AdminDashboard";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType; adminOnly?: boolean }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -27,8 +28,17 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   if (!user) {
-    // Redirect to login if not authenticated
     setLocation("/auth");
+    return null;
+  }
+
+  if (adminOnly && !(user as any).isAdmin) {
+    setLocation("/");
+    return null;
+  }
+
+  if (!(user as any).isAdmin && window.location.pathname === '/admin') {
+    setLocation("/");
     return null;
   }
 
@@ -48,6 +58,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/admin">
+        <ProtectedRoute component={AdminDashboard} adminOnly={true} />
+      </Route>
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
       </Route>

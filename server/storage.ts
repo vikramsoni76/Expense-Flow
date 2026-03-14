@@ -2,12 +2,15 @@ import { db } from "./db";
 import { users, expenses, type User, type InsertUser, type Expense, type InsertExpense } from "@shared/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 
+export type ExpenseWithUser = Expense & { username: string };
+
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   getExpenses(userId: number): Promise<Expense[]>;
+  getAllExpenses(): Promise<ExpenseWithUser[]>;
   createExpense(userId: number, expense: InsertExpense): Promise<Expense>;
   updateExpense(id: number, updates: Partial<Expense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<void>;
@@ -32,6 +35,30 @@ export class DatabaseStorage implements IStorage {
 
   async getExpenses(userId: number): Promise<Expense[]> {
     return await db.select().from(expenses).where(eq(expenses.userId, userId));
+  }
+
+  async getAllExpenses(): Promise<ExpenseWithUser[]> {
+    const rows = await db
+      .select({
+        id: expenses.id,
+        userId: expenses.userId,
+        date: expenses.date,
+        description: expenses.description,
+        startLocation: expenses.startLocation,
+        endLocation: expenses.endLocation,
+        customerName: expenses.customerName,
+        travelMode: expenses.travelMode,
+        amount: expenses.amount,
+        category: expenses.category,
+        status: expenses.status,
+        googleSheetRowId: expenses.googleSheetRowId,
+        createdAt: expenses.createdAt,
+        username: users.username,
+      })
+      .from(expenses)
+      .leftJoin(users, eq(expenses.userId, users.id))
+      .orderBy(expenses.createdAt);
+    return rows.map(r => ({ ...r, username: r.username ?? 'Unknown' }));
   }
 
   async createExpense(userId: number, expense: InsertExpense): Promise<Expense> {

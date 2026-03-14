@@ -5,8 +5,7 @@ import {
   LayoutDashboard,
   FileText,
   LogOut,
-  User,
-  Settings,
+  ShieldCheck,
   Menu,
 } from "lucide-react";
 import { useState } from "react";
@@ -71,27 +70,45 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-2">
-        <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-          Main Menu
-        </p>
-        <NavItem href="/" icon={LayoutDashboard}>
-          Dashboard
-        </NavItem>
-        <NavItem href="/reports" icon={FileText}>
-          Reports
-        </NavItem>
+        {(user as any)?.isAdmin ? (
+          <>
+            <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Admin Panel
+            </p>
+            <NavItem href="/admin" icon={ShieldCheck}>
+              Admin Dashboard
+            </NavItem>
+          </>
+        ) : (
+          <>
+            <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Main Menu
+            </p>
+            <NavItem href="/" icon={LayoutDashboard}>
+              Dashboard
+            </NavItem>
+            <NavItem href="/reports" icon={FileText}>
+              Reports
+            </NavItem>
+          </>
+        )}
       </div>
 
       <div className="p-4 border-t border-border/40 space-y-2">
         <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-secondary/50 border border-border/50">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-            {user?.username?.[0]?.toUpperCase() || "U"}
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center font-bold",
+            (user as any)?.isAdmin ? "bg-amber-500/15 text-amber-600" : "bg-primary/10 text-primary"
+          )}>
+            {(user as any)?.isAdmin ? <ShieldCheck className="w-4 h-4" /> : (user?.username?.[0]?.toUpperCase() || "U")}
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate text-foreground">
               {user?.username}
             </p>
-            <p className="text-xs text-muted-foreground truncate">Manager</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {(user as any)?.isAdmin ? 'Administrator' : 'Manager'}
+            </p>
           </div>
         </div>
         <button

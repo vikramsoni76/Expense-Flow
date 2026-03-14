@@ -58,6 +58,66 @@ export async function registerRoutes(
     res.sendStatus(204);
   });
 
+  // Admin middleware
+  const requireAdmin = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    if (!(req.user as any).isAdmin) return res.status(403).send("Forbidden");
+    next();
+  };
+
+  // Admin: get all expenses from all users
+  app.get('/api/admin/expenses', requireAdmin, async (req, res) => {
+    const expenses = await storage.getAllExpenses();
+    res.json(expenses);
+  });
+
+  // Admin: approve or reject an expense
+  app.patch('/api/admin/expenses/:id', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const { status } = req.body;
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    const expense = await storage.updateExpense(id, { status });
+    if (!expense) return res.status(404).json({ message: 'Expense not found' });
+    res.json(expense);
+  });
+
+  // Admin: CSV report of all users' expenses
+  app.get('/api/admin/reports/csv', requireAdmin, async (req, res) => {
+    const expenses = await storage.getAllExpenses();
+    try {
+      const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const yy = String(d.getUTCFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+      };
+      const rows = expenses.map(e => ({
+        Date: formatDate(e.date),
+        Employee: e.username,
+        'Customer Name': e.customerName || '',
+        Description: e.description || '',
+        'Start Location': e.startLocation || '',
+        'End Location': e.endLocation || '',
+        Category: e.category,
+        Mode: e.travelMode || '',
+        'Amount (INR)': Number(e.amount).toFixed(2),
+        Status: e.status,
+      }));
+      const { Parser } = await import('json2csv');
+      const parser = new Parser({ fields: ['Date', 'Employee', 'Customer Name', 'Description', 'Start Location', 'End Location', 'Category', 'Mode', 'Amount (INR)', 'Status'] });
+      const csv = parser.parse(rows);
+      res.header('Content-Type', 'text/csv');
+      res.attachment('all_expenses_report.csv');
+      return res.send(csv);
+    } catch (err) {
+      res.status(500).json({ message: 'Error generating CSV' });
+    }
+  });
+
   app.get(api.reports.csv.path, requireAuth, async (req, res) => {
     const { startDate, endDate } = req.query;
     const expenses = await storage.getExpensesByDateRange(
